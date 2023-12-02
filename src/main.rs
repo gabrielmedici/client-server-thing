@@ -3,20 +3,21 @@ use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::Duration;
 
-use bevy::app::{ScheduleRunnerPlugin, AppExit};
+use bevy::app::{AppExit, ScheduleRunnerPlugin};
 use bevy::log::LogPlugin;
 use bevy::prelude::*;
 use bevy::winit::WinitSettings;
 use clap::Parser;
 
+use client::SteamClientResource;
 use steamworks::{Client, SingleClient};
 
 mod server;
 use crate::server::runner::ServerRunnerPlugin;
-use crate::server::{ServerPlugin};
+use crate::server::ServerPlugin;
 
 mod client;
-use crate::client::ClientPlugin;
+use crate::client::{ClientPlugin};
 
 #[derive(Parser, Debug, Copy, Clone, Resource)]
 #[command(author, version, about, long_about = None)]
@@ -30,9 +31,6 @@ struct CMDArgs {
     #[arg(long, default_value_t = 60)]
     tickrate: u16,
 }
-
-#[derive(Resource)]
-struct SteamClientResource(Arc<Mutex<(Client, SingleClient)>>);
 
 #[derive(Resource)]
 pub struct ShouldExit(pub Arc<AtomicBool>);
@@ -79,13 +77,17 @@ fn main() {
             Ok(client) => client,
             Err(error) => {
                 error!("{:?}", error);
-                msgbox::create("Steam Error!", format!("{:?}", error).as_str(), msgbox::IconType::Error);
+                msgbox::create(
+                    "Steam Error!",
+                    format!("{:?}", error).as_str(),
+                    msgbox::IconType::Error,
+                );
                 return;
-            },
+            }
         };
-    
+
         let client_arc = Arc::new(Mutex::new(steam_client));
-    
+
         app.insert_resource(SteamClientResource(client_arc.clone()));
         app.insert_resource(WinitSettings {
             return_from_run: true,
