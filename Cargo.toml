@@ -15,6 +15,7 @@ opt-level = 1
 bevy = "0.12"
 bevy_egui = "0.23.0"
 clap = { version = "4.4.10", features = ["derive"] }
+ctrlc = "3.4.1"
 gag = "1.0.0"
 msgbox = "0.7.0"
 spin_sleep = "1.1.1"

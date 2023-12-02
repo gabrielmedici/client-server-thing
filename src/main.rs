@@ -13,7 +13,7 @@ use steamworks::{Client, SingleClient};
 
 mod server;
 use crate::server::runner::ServerRunnerPlugin;
-use crate::server::{ServerPlugin, ServerShouldExit};
+use crate::server::{ServerPlugin};
 
 mod client;
 use crate::client::ClientPlugin;
@@ -33,6 +33,9 @@ struct CMDArgs {
 
 #[derive(Resource)]
 struct SteamClientResource(Arc<Mutex<(Client, SingleClient)>>);
+
+#[derive(Resource)]
+pub struct ShouldExit(pub Arc<AtomicBool>);
 
 fn main() {
     let args = match CMDArgs::try_parse() {
@@ -61,6 +64,16 @@ fn main() {
 
     app.insert_resource(args);
 
+    let should_exit = Arc::new(AtomicBool::new(false));
+    let app_should_exit = should_exit.clone();
+    let ctrlc_should_exit = should_exit.clone();
+
+    ctrlc::set_handler(move || {
+        ctrlc_should_exit.store(true, std::sync::atomic::Ordering::Relaxed);
+    });
+
+    app.insert_resource(ShouldExit(app_should_exit));
+
     if !args.dedicated {
         let steam_client = match Client::init() {
             Ok(client) => client,
@@ -84,8 +97,7 @@ fn main() {
 
         let mut server_thread = None;
 
-        let server_should_exit = Arc::new(AtomicBool::new(false));
-        let server_should_exit_copy = server_should_exit.clone();
+        let server_should_exit = should_exit.clone();
 
         if !args.no_server {
             server_thread = Some(thread::spawn(move || {
@@ -94,7 +106,7 @@ fn main() {
                 server_app.add_event::<AppExit>();
 
                 server_app.insert_resource(SteamClientResource(client_arc.clone()));
-                server_app.insert_resource(ServerShouldExit(server_should_exit_copy));
+                server_app.insert_resource(ShouldExit(server_should_exit));
                 server_app.insert_resource(args);
 
                 let wait_time_secs = 1.0 / args.tickrate as f64;
@@ -106,18 +118,18 @@ fn main() {
                 server_app.add_plugins(ServerPlugin);
 
                 server_app.run();
+
                 info!("Server shutdown.");
             }));
         }
 
         app.run();
 
-        match server_thread {
-            Some(thread) => {
-                server_should_exit.store(true, std::sync::atomic::Ordering::Relaxed);
-                thread.join().unwrap();
-            },
-            None => return,
+        // Ensure should_exit is set to true if the window is closed.
+        should_exit.store(true, std::sync::atomic::Ordering::Relaxed);
+
+        if let Some(sv_thread) = server_thread {
+            sv_thread.join().unwrap();
         }
     } else if !args.no_server {
         let wait_time_secs = 1.0 / args.tickrate as f64;
@@ -130,6 +142,6 @@ fn main() {
 
         app.run();
 
-        warn!("Closing server");
+        info!("Server shutdown.");
     }
 }

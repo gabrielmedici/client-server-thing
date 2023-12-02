@@ -10,6 +10,8 @@ use bevy::{
     app::{AppExit, AppLabel, RunFixedUpdateLoop},
     prelude::*,
 };
+
+use crate::ShouldExit;
 pub mod runner;
 
 pub struct ServerPlugin;
@@ -19,9 +21,6 @@ pub struct ServerApp;
 
 #[derive(Resource)]
 struct SteamServerResource(Arc<Mutex<(Server, SingleClient<ServerManager>)>>);
-
-#[derive(Resource)]
-pub struct ServerShouldExit(pub Arc<AtomicBool>);
 
 impl Plugin for ServerPlugin {
     fn build(&self, app: &mut App) {
@@ -39,8 +38,8 @@ impl Plugin for ServerPlugin {
                 server
             },
             Err(error) => {
-                error!("Error initializing steam server: {:?}", error);
-                msgbox::create("Error initializing Steam Server!", format!("{:?}", error).as_str(), msgbox::IconType::Error);
+                error!("Error initializing steam server: {}", error);
+                msgbox::create("Error initializing Steam Server!", format!("{}", error).as_str(), msgbox::IconType::Error);
                 return;
             },
         };
@@ -71,7 +70,7 @@ impl Plugin for ServerPlugin {
     }
 }
 
-fn watch_exit(should_exit: Res<ServerShouldExit>, mut events: EventWriter<AppExit>) {
+fn watch_exit(should_exit: Res<ShouldExit>, mut events: EventWriter<AppExit>) {
     if should_exit.0.load(std::sync::atomic::Ordering::Relaxed) {
         info!("Server shutdown requested.");
         events.send(AppExit);
