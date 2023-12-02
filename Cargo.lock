@@ -3829,7 +3829,6 @@ checksum = "a2eb9349b6444b326872e140eb1cf5e7c522154d69e7a0ffb0fb81c06b37543f"
 [[package]]
 name = "steamworks"
 version = "0.10.0"
-source = "git+https://github.com/Noxime/steamworks-rs.git?rev=ce20641d50df139af882bb70b99c2eba5add69f4#ce20641d50df139af882bb70b99c2eba5add69f4"
 dependencies = [
  "bitflags 1.3.2",
  "lazy_static",
@@ -3840,7 +3839,6 @@ dependencies = [
 [[package]]
 name = "steamworks-sys"
 version = "0.10.0"
-source = "git+https://github.com/Noxime/steamworks-rs.git?rev=ce20641d50df139af882bb70b99c2eba5add69f4#ce20641d50df139af882bb70b99c2eba5add69f4"
 
 [[package]]
 name = "str-buf"
