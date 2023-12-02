@@ -1,0 +1,22 @@
+[package]
+name = "idk"
+version = "0.1.0"
+edition = "2021"
+
+# Enable max optimizations for dependencies, but not for our code:
+[profile.dev.package."*"]
+opt-level = 3
+
+# Enable only a small amount of optimization in debug mode
+[profile.dev]
+opt-level = 1
+
+[dependencies]
+bevy = "0.12"
+bevy_egui = "0.23.0"
+clap = { version = "4.4.10", features = ["derive"] }
+gag = "1.0.0"
+msgbox = "0.7.0"
+spin_sleep = "1.1.1"
+steamworks = { git = "https://github.com/Noxime/steamworks-rs.git", rev = "ce20641d50df139af882bb70b99c2eba5add69f4" }
+#steamworks = "0.10.0"
